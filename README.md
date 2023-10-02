@@ -1,9 +1,9 @@
 # snake
 
-Snake, in C
+Snake, in C with ncurses
 
 ## Build
-The project uses GNU Make for the build process
+This project uses GNU Make for the building process
 
 ```bash
 make
