@@ -1,63 +1,10 @@
+#include "game.h"
+
 #include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
 #include <time.h>
-#include <unistd.h>
 #include <curses.h>
 
-#define VEC2(X, Y) (Vec2) { .x = (X), .y = (Y) }
-
-#define VEC2_DOWN  VEC2( 0,  1)
-#define VEC2_UP    VEC2( 0, -1)
-#define VEC2_LEFT  VEC2(-1,  0)
-#define VEC2_RIGTH VEC2( 1,  0)
-
-#define CHAR_SNAKE_HEAD '@'
-#define CHAR_SNAKE_BODY '0'
-#define CHAR_FOOD '$'
-#define CHAR_BORDER '#'
-
-#define GAME_SPEED 128 * 1000
-#define MAX_SNAKE_LENGTH 4096
-
-typedef struct
-{
-    int32_t x;
-    int32_t y;
-} Vec2;
-
-typedef struct
-{
-    Vec2* snake;
-    Vec2 snake_dir;
-    size_t snake_length;
-    Vec2 food;
-
-    Vec2 window_size;
-    bool quit;
-} Game;
-
-Vec2 vec2_add(Vec2 a, Vec2 b);
-bool vec2_equals(Vec2 a, Vec2 b);
-
-Game* game_alloc(int32_t max_snake_size);
-void game_free(Game* game);
-void game_init(Game* game);
-void game_render(Game* game);
-void game_input(Game* game);
-void game_logic(Game* game);
-
-int32_t rand_range(int32_t min, int32_t max);
-
-Vec2 vec2_add(Vec2 a, Vec2 b)
-{
-    return VEC2(a.x + b.x, a.y + b.y);
-}
-
-bool vec2_equals(Vec2 a, Vec2 b)
-{
-    return (a.x == b.x && a.y == b.y);
-}
+#include "util.h"
 
 Game* game_alloc(int32_t max_snake_size)
 {
@@ -82,6 +29,8 @@ void game_free(Game* game)
 
 void game_init(Game* game)
 {
+    srand(time(NULL));
+
     getmaxyx(stdscr, game->window_size.y, game->window_size.x);
 
     game->snake[0] = VEC2(game->window_size.x / 2, game->window_size.y / 2);
@@ -227,41 +176,4 @@ void game_logic(Game* game)
             return;
         }
     }
-}
-
-int32_t rand_range(int32_t min, int32_t max)
-{
-    return (rand() % (max - min)) + min;
-}
-
-int main(void)
-{
-    srand(time(NULL));
-
-    Game* game = game_alloc(MAX_SNAKE_LENGTH);
-    if (game == NULL) {
-        fprintf(stderr, "ERROR: Could not allocate memory for game\n");
-        return EXIT_FAILURE;
-    }
-
-    initscr();
-    noecho();
-    timeout(0);
-    curs_set(0);
-    keypad(stdscr, TRUE);
-
-    game_init(game);
-
-    while (!game->quit) {
-        game_render(game);
-        usleep(GAME_SPEED);
-        game_input(game);
-        game_logic(game);
-    }
-
-    endwin();
-    game_free(game);
-    printf("Score: %ld\n", game->snake_length);
-
-    return EXIT_SUCCESS;
 }
